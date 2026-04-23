@@ -54,15 +54,23 @@ def load_vendor_db():
     return sliced, str(existing_path)
 
 
-def detect_rule(raw_rule):
+def detect_rule(raw_rule, vendor_name=""):
     normalized = normalize_text(raw_rule)
+    vendor_normalized = normalize_text(vendor_name)
     if "프로젝트가x1.5+2만원" in normalized:
         return "project_15_plus_20k"
     if "국내제작x1.5+4만원" in normalized:
         return "domestic_15_plus_40k"
     if "국내제작x1.5" in normalized:
         return "domestic_15"
-    if "(mat)한국ta" in normalized or "mat한국ta" in normalized:
+    if (
+        "(mat)한국ta" in normalized
+        or "mat한국ta" in normalized
+        or "상품코드단가(중간3개)x1.4" in normalized
+        or "상품코드단가중간3개x1.4" in normalized
+        or "(mat)한국ta" in vendor_normalized
+        or "mat한국ta" in vendor_normalized
+    ):
         return "mat_korea_ta"
     if "상품코드뒤3자리x1.4" in normalized or "상품코드단가x1.4" in normalized:
         return "product_code_last3_14"
@@ -287,7 +295,7 @@ def main():
     selected_row = filtered[filtered["거래처"] == selected_vendor].iloc[0]
     raw_rule = selected_row["기준"]
     note_text = selected_row["비고"]
-    rule_key = detect_rule(raw_rule)
+    rule_key = detect_rule(raw_rule, selected_vendor)
 
     st.markdown("### 거래처 기준")
     st.write(f"**거래처:** {selected_vendor}")
